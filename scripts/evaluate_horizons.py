@@ -164,6 +164,20 @@ def plot_oblast(n: int, name: str, oblast_id: int, P, T, origin_x, thresholds, h
     return rows
 
 
+def plot_no_data(name: str, oblast_id: int) -> None:
+    """Placeholder plot for an oblast with no air-raid data (zero positive labels in the test split)."""
+    fig, ax = plt.subplots(figsize=(20, 9))
+    ax.axis("off")
+    ax.text(0.5, 0.5,
+            "No Data Available\n\nno air-raid alerts recorded in the 2026 test window\n"
+            "→ excluded from global / macro-averaged metrics",
+            ha="center", va="center", fontsize=20, color="0.35",
+            bbox=dict(boxstyle="round,pad=1.0", fc="0.96", ec="0.7"))
+    fig.suptitle(f"{name}  (oblast_id={oblast_id}) — No Data Available", fontsize=16, y=0.97)
+    fig.savefig(PLOTS / f"horizon_eval_{_slug(name)}.png", dpi=120)
+    plt.close(fig)
+
+
 # --------------------------------------------------------------------------- tables
 def _fmt(v) -> str:
     return "—" if v is None or (isinstance(v, float) and np.isnan(v)) else f"{v:.3f}"
@@ -176,39 +190,84 @@ def _md_table(headers: list[str], rows: list[list]) -> str:
     return "\n".join(out)
 
 
-def build_summary(detail: pd.DataFrame, horizon: int) -> str:
-    g = detail.groupby(["oblast", "oblast_id"], sort=False)
-    master = g.agg(pr_auc=("pr_auc", "mean"), f1_macro=("f1_macro", "mean"),
-                   roc_auc=("roc_auc", "mean"), pos_rate=("pos_rate", "mean")).reset_index()
-    master = master.sort_values("pr_auc", ascending=False, na_position="last")
+def build_summary(detail: pd.DataFrame, horizon: int) -> tuple[str, str]:
+    """Return (full_markdown_for_file, readme_block). Aggregates use ACTIVE oblasts only
+    (those with >0 positive labels in the test split); excluded oblasts are still listed as 'no data'."""
+    active = detail[detail["active"]].copy()
+    excl = (detail[~detail["active"]][["oblast", "oblast_id"]]
+            .drop_duplicates().sort_values("oblast_id"))
+    n_active = active["oblast"].nunique()
+    excl_names = list(excl["oblast"])
 
+    # ---- per-horizon GLOBAL table (mean over the active oblasts), with a mean-over-horizons row
+    per_h = (active.groupby("horizon")
+             .agg(pr_auc=("pr_auc", "mean"), f1_macro=("f1_macro", "mean"), roc_auc=("roc_auc", "mean"))
+             .reset_index().sort_values("horizon"))
+    ph_rows = [[f"k{int(r.horizon)}", _fmt(r.pr_auc), _fmt(r.f1_macro), _fmt(r.roc_auc)]
+               for r in per_h.itertuples()]
+    ph_rows.append(["**mean**", _fmt(active["pr_auc"].mean()),
+                    _fmt(active["f1_macro"].mean()), _fmt(active["roc_auc"].mean())])
+    per_horizon_md = _md_table(["Horizon", "PR-AUC", "F1-macro", "ROC-AUC"], ph_rows)
+
+    # ---- master table: active oblasts (averaged over horizons), then excluded as 'no data'
+    g = (active.groupby(["oblast", "oblast_id"], sort=False)
+         .agg(pr_auc=("pr_auc", "mean"), f1_macro=("f1_macro", "mean"),
+              roc_auc=("roc_auc", "mean"), pos_rate=("pos_rate", "mean")).reset_index()
+         .sort_values("pr_auc", ascending=False, na_position="last"))
     master_rows = [[r.oblast, int(r.oblast_id), _fmt(r.pr_auc), _fmt(r.f1_macro),
-                    _fmt(r.roc_auc), _fmt(r.pos_rate)] for r in master.itertuples()]
+                    _fmt(r.roc_auc), _fmt(r.pos_rate)] for r in g.itertuples()]
+    for r in excl.itertuples():
+        master_rows.append([f"{r.oblast} *(no data)*", int(r.oblast_id), "—", "—", "—", "0.000"])
     master_md = _md_table(
         ["Oblast", "id", "PR-AUC (mean)", "F1-macro (mean)", "ROC-AUC (mean)", "alert rate"], master_rows)
 
-    # per-horizon PR-AUC breakdown (oblasts × k1..k6)
-    pivot = detail.pivot_table(index=["oblast", "oblast_id"], columns="horizon",
-                               values="pr_auc", sort=False).reset_index()
+    # ---- PR-AUC by horizon, per oblast (active rows + excluded shown as —)
     hcols = [f"k{k+1}" for k in range(horizon)]
+    pivot = active.pivot_table(index=["oblast", "oblast_id"], columns="horizon",
+                               values="pr_auc", sort=False).reset_index()
     breakdown_rows = []
     for r in pivot.itertuples(index=False):
         vals = list(r)
         breakdown_rows.append([vals[0], int(vals[1])] + [_fmt(v) for v in vals[2:]])
+    for r in excl.itertuples():
+        breakdown_rows.append([f"{r.oblast} *(no data)*", int(r.oblast_id)] + ["—"] * horizon)
     breakdown_md = _md_table(["Oblast", "id"] + hcols, breakdown_rows)
 
-    overall = detail[["pr_auc", "f1_macro", "roc_auc"]].mean()
-    md = (
-        "# Per-oblast holdout-test evaluation (A3T-GCN, 2026)\n\n"
-        f"- Oblasts: **{detail['oblast'].nunique()}**  ·  horizons: **k=1..{horizon}**\n"
-        f"- Global mean over all oblasts×horizons — PR-AUC **{overall['pr_auc']:.3f}**, "
-        f"F1-macro **{overall['f1_macro']:.3f}**, ROC-AUC **{overall['roc_auc']:.3f}**\n\n"
-        "## Master table — metrics averaged over horizons, per oblast\n\n"
-        + master_md
-        + "\n\n## PR-AUC by horizon (per oblast)\n\n"
-        + breakdown_md + "\n"
+    o_pr, o_f1, o_roc = active["pr_auc"].mean(), active["f1_macro"].mean(), active["roc_auc"].mean()
+    note = (
+        f"**Active oblasts in aggregate: {n_active}** "
+        f"(excluded {len(excl_names)} with zero alerts in the 2026 test window: "
+        f"{', '.join(excl_names)}). Excluded oblasts are still plotted as *No Data Available* below."
     )
-    return md
+    overall_line = (f"Global mean over the {n_active} active oblasts × {horizon} horizons — "
+                    f"**PR-AUC {o_pr:.3f}**, **F1-macro {o_f1:.3f}**, **ROC-AUC {o_roc:.3f}**.")
+
+    full_md = (
+        "# Per-oblast holdout-test evaluation (A3T-GCN, 2026)\n\n"
+        + note + "\n\n" + overall_line + "\n\n"
+        "## Global metrics by horizon (active oblasts only)\n\n" + per_horizon_md
+        + "\n\n## Master table — metrics averaged over horizons, per oblast\n\n" + master_md
+        + "\n\n## PR-AUC by horizon (per oblast)\n\n" + breakdown_md + "\n"
+    )
+    readme_block = (
+        "## Corrected Evaluation Metrics (excluding zero-positive oblasts)\n\n"
+        + note + "\n\n" + overall_line + "\n\n"
+        "### Global metrics by horizon (k = 1..6, active oblasts only)\n\n" + per_horizon_md
+        + "\n\n### Per-oblast summary (averaged over horizons)\n\n" + master_md + "\n"
+    )
+    return full_md, readme_block
+
+
+def update_readme(readme_path: Path, block: str) -> None:
+    """Idempotently write the corrected metrics block at the END of README, between sentinel markers."""
+    start, end = "<!-- CORRECTED_METRICS:START -->", "<!-- CORRECTED_METRICS:END -->"
+    section = f"{start}\n{block}\n{end}\n"
+    text = readme_path.read_text() if readme_path.exists() else ""
+    if start in text and end in text:
+        text = text[:text.index(start)] + section + text[text.index(end) + len(end):]
+    else:
+        text = (text.rstrip() + "\n\n" if text.strip() else "") + section
+    readme_path.write_text(text)
 
 
 # --------------------------------------------------------------------------- main
@@ -230,22 +289,44 @@ def main() -> None:
     print(f"[infer] test windows={W}  nodes={N}  horizons={H}  "
           f"span {origin_x.min():%Y-%m-%d} → {origin_x.max():%Y-%m-%d}")
 
+    # dynamic filter: an oblast with zero positive labels across the whole test split has "no data"
+    total_pos = T.sum(axis=(0, 2))  # [N]
+    excluded = {n for n in range(N) if total_pos[n] == 0}
+    excl_names = sorted(idx_to_name.get(n, f"node{n}") for n in excluded)
+    print(f"[filter] {len(excluded)} zero-positive oblast(s) excluded from global metrics: {excl_names}")
+
     PLOTS.mkdir(parents=True, exist_ok=True)
     detail_rows: list[dict] = []
     for n in range(N):
         name = idx_to_name.get(n, f"node{n}")
         oid = idx_to_oblast.get(n, n)
-        detail_rows.extend(plot_oblast(n, name, oid, P, T, origin_x, thresholds, H))
+        if n in excluded:
+            plot_no_data(name, oid)  # blank '<name> — No Data Available' plot, no crash
+            for k in range(H):
+                detail_rows.append({
+                    "oblast": name, "oblast_id": oid, "horizon": k + 1,
+                    "pr_auc": float("nan"), "roc_auc": float("nan"), "f1_macro": float("nan"),
+                    "n_pos": 0, "n": int(T.shape[0]), "pos_rate": 0.0,
+                    "threshold": float(thresholds.get(f"k{k+1}", {}).get("threshold", 0.5)),
+                    "active": False})
+            print(f"  [skip] {n+1:>2}/{N}  {name}: no alerts in test split → 'No Data Available'")
+            continue
+        rows = plot_oblast(n, name, oid, P, T, origin_x, thresholds, H)
+        for r in rows:
+            r["active"] = True
+        detail_rows.extend(rows)
         print(f"  [plot] {n+1:>2}/{N}  horizon_eval_{_slug(name)}.png")
 
     detail = pd.DataFrame(detail_rows)
     detail.to_csv(PLOTS / "metrics_per_oblast_horizon.csv", index=False)
-    summary_md = build_summary(detail, H)
-    (PLOTS / "metrics_summary.md").write_text(summary_md)
+    full_md, readme_block = build_summary(detail, H)
+    (PLOTS / "metrics_summary.md").write_text(full_md)
+    update_readme(ROOT / "README.md", readme_block)
 
     n_png = len(list(PLOTS.glob("horizon_eval_*.png")))
-    print("\n" + summary_md)
+    print("\n" + full_md)
     print(f"[done] {n_png} per-oblast PNGs + metrics_summary.md + metrics_per_oblast_horizon.csv → {PLOTS}")
+    print(f"[readme] corrected metrics block written to {ROOT / 'README.md'}")
 
 
 if __name__ == "__main__":

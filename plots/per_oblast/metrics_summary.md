@@ -1,7 +1,20 @@
 # Per-oblast holdout-test evaluation (A3T-GCN, 2026)
 
-- Oblasts: **27**  ·  horizons: **k=1..6**
-- Global mean over all oblasts×horizons — PR-AUC **0.336**, F1-macro **0.475**, ROC-AUC **0.608**
+**Active oblasts in aggregate: 24** (excluded 3 with zero alerts in the 2026 test window: Crimea, Luhansk, Sevastopol). Excluded oblasts are still plotted as *No Data Available* below.
+
+Global mean over the 24 active oblasts × 6 horizons — **PR-AUC 0.336**, **F1-macro 0.472**, **ROC-AUC 0.608**.
+
+## Global metrics by horizon (active oblasts only)
+
+| Horizon | PR-AUC | F1-macro | ROC-AUC |
+| --- | --- | --- | --- |
+| k1 | 0.440 | 0.578 | 0.708 |
+| k2 | 0.321 | 0.483 | 0.605 |
+| k3 | 0.316 | 0.457 | 0.592 |
+| k4 | 0.316 | 0.442 | 0.587 |
+| k5 | 0.316 | 0.437 | 0.582 |
+| k6 | 0.307 | 0.434 | 0.575 |
+| **mean** | 0.336 | 0.472 | 0.608 |
 
 ## Master table — metrics averaged over horizons, per oblast
 
@@ -31,9 +44,9 @@
 | Rivne | 19 | 0.135 | 0.543 | 0.644 | 0.063 |
 | Vinnytsia | 23 | 0.115 | 0.528 | 0.578 | 0.065 |
 | Ivano-Frankivsk | 7 | 0.074 | 0.520 | 0.626 | 0.026 |
-| Crimea | 4 | — | 0.500 | — | 0.000 |
-| Luhansk | 14 | — | 0.500 | — | 0.000 |
-| Sevastopol | 20 | — | 0.500 | — | 0.000 |
+| Crimea *(no data)* | 4 | — | — | — | 0.000 |
+| Luhansk *(no data)* | 14 | — | — | — | 0.000 |
+| Sevastopol *(no data)* | 20 | — | — | — | 0.000 |
 
 ## PR-AUC by horizon (per oblast)
 
@@ -63,3 +76,6 @@
 | Zakarpattia | 25 | 0.437 | 0.322 | 0.340 | 0.322 | 0.265 | 0.211 |
 | Zaporizhzhia | 26 | 0.533 | 0.447 | 0.445 | 0.461 | 0.467 | 0.462 |
 | Zhytomyr | 27 | 0.363 | 0.196 | 0.183 | 0.175 | 0.168 | 0.162 |
+| Crimea *(no data)* | 4 | — | — | — | — | — | — |
+| Luhansk *(no data)* | 14 | — | — | — | — | — | — |
+| Sevastopol *(no data)* | 20 | — | — | — | — | — | — |
