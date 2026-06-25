@@ -78,7 +78,7 @@ def test_load_panel_and_build_datasets(tmp_path):
     assert not np.isnan(panel["X"]).any()
 
     data = build_datasets(cfg)
-    assert data["edge_index"].shape == (2, 4)
+    assert data["edge_index"].shape == (2, N_NODES)  # ring fixture → N edges
     assert len(data["train"]) > 0
     xb, yb = next(iter(DataLoader(data["train"], batch_size=cfg.batch_size)))
     assert xb.shape[1:] == (N_NODES, N_FEAT, cfg.window)
