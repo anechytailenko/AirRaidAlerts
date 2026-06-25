@@ -162,19 +162,6 @@ The visualizations below display the **predicted P(alert)** (navy line) versus t
 
 
 
-# Web Demo
-
-
-# Analysis
-
-![](/demo/web_01.png)
-
-# Prediction
-
-![](/demo/web_02.png)
-
-
-
 
 
 
