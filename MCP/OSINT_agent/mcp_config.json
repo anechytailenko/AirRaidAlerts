@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "airraid-osint": {
+      "command": "/Users/annanechytailenko/Desktop/AirRaidAlerts/.venv/bin/python",
+      "args": ["/Users/annanechytailenko/Desktop/AirRaidAlerts/MCP/OSINT_agent/server.py"],
+      "cwd": "/Users/annanechytailenko/Desktop/AirRaidAlerts",
+      "env": {
+        "PYTHONUNBUFFERED": "1",
+        "PYTHONPATH": "/Users/annanechytailenko/Desktop/AirRaidAlerts/src"
+      }
+    }
+  }
+}

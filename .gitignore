@@ -1,0 +1,15 @@
+# Secrets — NEVER commit
+.env
+get_token.py
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+
+# Data / artifacts
+data/
+*.log
+.DS_Store
