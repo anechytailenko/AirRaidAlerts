@@ -326,6 +326,11 @@ produce it (not part of the live pipeline).
 - *No synthetic data:* if no real OSINT export is present, the script inserts nothing and logs it — flags are never fabricated.
 
 ### Use case B (flagship) — Reporting / Stage 5: narrative "analyst" layer (LangGraph)
+**Now elevated into the full Narrative Analyst Agent — see
+[`07-narrative-analyst-agent.md`](./07-narrative-analyst-agent.md)** (containerized, read-only,
+self-extending MCP + LangGraph). The sketch below is the original boundary design; `07` is the
+authoritative spec.
+
 **This is the project's highest-value agent — its "superpower."** It turns the deterministic model
 outputs into **decision-grade narrative**: compelling for project demonstrations, and genuinely useful
 for internal decision-making (a human reads *"elevated P(alert) across eastern oblasts at +3 h; skill
@@ -352,8 +357,12 @@ them.
   unit-tested Python; the LLM only orchestrates *which* analysis to run and *how* to explain it. This
   **strengthens** the deterministic-core guarantee rather than eroding it — and is solely-Python (the
   MCP tools are Python functions served over a Python MCP server).
-- *Scope:* the MCP tool layer is **forward-looking, not built now** — but the agent's tool boundary is
-  designed now so MCP tools plug in later without a redesign.
+- *Scope:* the MCP tool layer is **now specified in [`07`](./07-narrative-analyst-agent.md)** — a
+  containerized, read-only, **self-extending** MCP + LangGraph agent (it can synthesize a new analytical
+  tool on demand, sandboxed). The tool-interface boundary designed here plugs into `07` without a redesign.
+- *Containment (`07` §4):* the agent runs in an **isolated container with duplicated, read-only copies of
+  `data/exports` + `artifacts`**, so the dynamic code generator can never delete or corrupt the real
+  training data or model weights — physically reinforcing the deterministic-core guarantee above.
 
 ---
 

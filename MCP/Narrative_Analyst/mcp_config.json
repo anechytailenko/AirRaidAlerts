@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "airraid-analyst": {
+      "command": "/Users/annanechytailenko/Desktop/AirRaidAlerts/.venv/bin/python",
+      "args": ["/Users/annanechytailenko/Desktop/AirRaidAlerts/MCP/Narrative_Analyst/server.py"],
+      "cwd": "/Users/annanechytailenko/Desktop/AirRaidAlerts",
+      "env": {
+        "PYTHONUNBUFFERED": "1",
+        "PYTHONPATH": "/Users/annanechytailenko/Desktop/AirRaidAlerts/src",
+        "AIRRAID_EXPORTS_DIR": "/Users/annanechytailenko/Desktop/AirRaidAlerts/data/exports",
+        "OLLAMA_BASE_URL": "http://localhost:11434"
+      }
+    }
+  }
+}

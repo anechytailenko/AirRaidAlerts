@@ -12,3 +12,5 @@ __pycache__/
 # Data / artifacts
 *.log
 .DS_Store
+
+dummy/

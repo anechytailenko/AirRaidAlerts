@@ -1,0 +1,34 @@
+# Narrative Analyst Agent — containment topology (plans/07 §4).
+#
+# Security posture (defense in depth around the dynamic code synthesizer):
+#   • read_only rootfs + a small tmpfs scratch  → generated code has nowhere to persist
+#   • data/exports + artifacts mounted :ro       → it physically cannot corrupt training data / weights
+#   • no_new_privileges, cap_drop ALL, non-root  → no privilege escalation
+#   • mem_limit + pids_limit                      → a runaway tool cannot exhaust the host
+#   • Ollama stays on the HOST, reached via host.docker.internal (NOT bundled in the container)
+services:
+  analyst:
+    build:
+      context: ../..              # repo root (so src/ and MCP/ are in the build context)
+      dockerfile: MCP/Narrative_Analyst/Dockerfile
+    image: airraid-analyst:latest
+    read_only: true
+    tmpfs:
+      - /tmp:rw,size=256m         # the ONLY writable location (dynamic-tool scratch + output PNG)
+    volumes:
+      - ../../data/exports:/data/exports:ro     # read-only replica of the analytical parquet
+      - ../../artifacts:/artifacts:ro           # read-only replica of the trained model bundle
+    environment:
+      AIRRAID_EXPORTS_DIR: /data/exports
+      OLLAMA_BASE_URL: http://host.docker.internal:11434   # local LLM on the host
+      LLM_MODEL: llama3.1:8b
+    extra_hosts:
+      - "host.docker.internal:host-gateway"      # Linux: reach the host Ollama
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    mem_limit: 2g
+    pids_limit: 256
+    stdin_open: true              # MCP stdio transport
+    tty: true

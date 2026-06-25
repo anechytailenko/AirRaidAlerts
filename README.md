@@ -1,4 +1,7 @@
 
+# Interactice analysis demo
+
+![Demo of the application](demo/record_01.gif)
 
 # Train process 
 ![](/demo/train_01.png)
