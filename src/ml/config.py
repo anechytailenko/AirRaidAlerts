@@ -44,6 +44,17 @@ def _exports_dir() -> Path:
     return Path(os.environ.get("AIRRAID_EXPORTS_DIR", str(_DEFAULT_EXPORTS)))
 
 
+def _artifacts_dir() -> Path:
+    """Writable + persisted output dir. On Kaggle ONLY `/kaggle/working` is saved to the notebook
+    Output, so default there (REPO_ROOT resolves to read-only `/kaggle`, which silently drops files)."""
+    env = os.environ.get("AIRRAID_ARTIFACTS_DIR")
+    if env:
+        return Path(env)
+    if Path("/kaggle/working").is_dir():
+        return Path("/kaggle/working/artifacts/stgnn")
+    return REPO_ROOT / "artifacts" / "stgnn"
+
+
 @dataclass
 class Config:
     # data
@@ -79,8 +90,8 @@ class Config:
     # threshold calibration
     fbeta: float = 1.0  # 1.0 = F1; set 2.0 to favor recall (missing an alert is costlier)
 
-    # outputs
-    artifacts_dir: str = field(default_factory=lambda: str(REPO_ROOT / "artifacts" / "stgnn"))
+    # outputs (Kaggle: must live under /kaggle/working to be saved to the notebook Output)
+    artifacts_dir: str = field(default_factory=lambda: str(_artifacts_dir()))
 
     def __post_init__(self) -> None:
         d = Path(self.exports_dir)
