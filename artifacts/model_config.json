@@ -1,0 +1,39 @@
+{
+  "in_channels": 21,
+  "window": 12,
+  "hidden": 64,
+  "num_layers": 1,
+  "dropout": 0.2,
+  "horizon": 6,
+  "feature_cols": [
+    "temp_c",
+    "wind_speed",
+    "precip_mm",
+    "cloud_cover",
+    "self_alert_active",
+    "neighbor_alert_count",
+    "neighbor_alert_frac",
+    "hour_sin",
+    "hour_cos",
+    "dow_sin",
+    "dow_cos",
+    "is_weekend",
+    "month",
+    "osint_mig31_airborne",
+    "osint_tu95_takeoff",
+    "osint_mass_national",
+    "osint_mass_oblast",
+    "hours_since_mig31",
+    "hours_since_tu95",
+    "centroid_lat",
+    "centroid_lon"
+  ],
+  "horizons": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+  ]
+}
