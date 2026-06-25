@@ -12,8 +12,8 @@
 
 # Analysis
 
-[](/demo/web_01.png)
+![](/demo/web_01.png)
 
 # Prediction
 
-[](/demo/web_02.png)
+![](/demo/web_02.png)
