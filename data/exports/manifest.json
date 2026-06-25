@@ -1,0 +1,50 @@
+{
+  "built_utc": "2026-06-25T08:08:53+00:00",
+  "git_rev": "no-commit",
+  "grain": "both",
+  "ttl_hours": 6,
+  "source_db_max_ingested_at": "2026-06-25 07:19:21.437240+00:00",
+  "row_counts": {
+    "long_rows": 6150978,
+    "wide_rows": 1025163,
+    "edges_rows": 106,
+    "oblasts_rows": 27
+  },
+  "source_table_rows": {
+    "panel": 6150978,
+    "fm": 1025163,
+    "obl": 27,
+    "adj": 106,
+    "osint": 1021
+  },
+  "files": {
+    "airraid_analytical_long.parquet": {
+      "bytes": 18178013,
+      "sha256_16": "5e9fa7b63ae7617c"
+    },
+    "airraid_analytical_wide.parquet": {
+      "bytes": 6249861,
+      "sha256_16": "2d293cb38350f852"
+    },
+    "data_dictionary.md": {
+      "bytes": 2353,
+      "sha256_16": "63f8f55d0f3cbc2f"
+    },
+    "edges.parquet": {
+      "bytes": 1105,
+      "sha256_16": "047d2778fff5b44e"
+    },
+    "manifest.json": {
+      "bytes": 1026,
+      "sha256_16": "07f1a35e3bc59780"
+    },
+    "oblasts.parquet": {
+      "bytes": 1432,
+      "sha256_16": "8801958a520ebd82"
+    },
+    "sample_preview.csv": {
+      "bytes": 1638393,
+      "sha256_16": "aa322fb9682ae5ec"
+    }
+  }
+}
